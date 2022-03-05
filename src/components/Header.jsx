@@ -1,24 +1,48 @@
+import { Fragment } from "react";
 import styled from "styled-components";
 import { auth, provider } from "../firebase";
 import {  signInWithPopup } from "firebase/auth";
+import {useDispatch , useSelector} from "react-redux";
+import {useNavigate} from "react-router-dom";
+import { selectUserName , setUserLoginDetails , selectUserPhoto } from "../features/user/userSlice";
+
 
 
 const Header = (props) => {
+
+  const dispatch = useDispatch();
+  const history = useNavigate();
+  const userName = useSelector(selectUserName);
+  const userPhoto = useSelector(selectUserPhoto);
+
   const handleAuth = () => {
     signInWithPopup(auth , provider)
       .then((result) => {
-        console.log(result);
+        setUser(result.user);
       })
       .catch((error) => {
         alert(error.message);
       });
   };
+
+  const setUser = (user) => {
+    dispatch(
+      setUserLoginDetails({
+        name:user.displayName,
+        email: user.email,
+        photo: user.photoURL,
+      })
+    )
+  }
   return (
     <Nav>
       <Logo>
         <img src="/images/logo.svg" alt="Disney Plus " />
       </Logo>
-      <NavMenu>
+      {!userName && <Login onClick={handleAuth}>Login</Login>}
+      {userName &&
+      <Fragment>
+        <NavMenu>
         <a href="home">
           <img src="/images/home-icon.svg" alt="home" />
           <span>HOME</span>
@@ -44,7 +68,9 @@ const Header = (props) => {
           <span>SERIES</span>
         </a>
       </NavMenu>
-      <Login onClick={handleAuth}>Login</Login>
+      <UserImg src={userPhoto} alt={userName}></UserImg>
+      </Fragment>
+      }
     </Nav>
   );
 };
@@ -151,6 +177,10 @@ const Login = styled.a`
     color: #000;
     border-color: transparent;
   }
+`;
+
+const UserImg = styled.img`
+height: 100%
 `;
 
 export default Header;
