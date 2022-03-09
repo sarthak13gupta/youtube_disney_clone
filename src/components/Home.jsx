@@ -5,8 +5,64 @@ import Recommends from "./Recommends";
 import NewDisney from "./NewDisney";
 import Trending from "./Trending";
 import Originals from "./Originals";
+import {useDispatch , useSelector} from "react-redux";
+import {selectUserName} from "../features/user/userSlice"
+import {setMovies} from "../features/movie/movieSlice"
+import { useEffect, useRef } from "react";
+import db from "../firebase";
+import { collection , doc  , getDocs} from "firebase/firestore/lite";
 
 const Home = (props) => {
+
+  // let  moviesCollectionRef = useRef();
+
+  const dispatch = useDispatch();
+  const userName = useSelector(selectUserName); 
+  let recommends = [];
+  let newDisneys = [];
+  let originals = [];
+  let trending = [];
+  
+  useEffect(() => {
+    // console.log("hello");
+    const colRef = collection(db , "movies");
+   const querySnapshot = getDocs(colRef); 
+    querySnapshot.then((snapshot) => {
+      snapshot.docs.map((doc) => {
+      // console.log(doc.id, " => ", doc.data());
+        console.log(recommends);
+        switch (doc.data().type) {
+          case "recommend":
+            recommends = [...recommends, { id: doc.id, ...doc.data() }];
+            break;
+
+          case "new":
+            newDisneys = [...newDisneys, { id: doc.id, ...doc.data() }];
+            break;
+
+          case "original":
+            originals = [...originals, { id: doc.id, ...doc.data() }];
+            break;
+
+          case "trending":
+            trending = [...trending, { id: doc.id, ...doc.data() }];
+            break;
+        }
+      });
+
+      dispatch(
+        setMovies({
+          recommend: recommends,
+          newDisney: newDisneys,
+          original: originals,
+          trending: trending,
+        })
+      );
+    }).catch((err) => alert(err.message));
+  }, [userName]);
+
+
+
   return (
     <Container>
       <ImgSlider/>
